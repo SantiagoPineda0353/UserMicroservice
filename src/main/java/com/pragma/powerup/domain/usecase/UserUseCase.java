@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class UserUseCase implements IUserServicePort {
 
-    private static final int ID_ROL=2;
+    private static final Long ID_ROL=2L;
     private static final int MIN_AGE=18;
     private static final ZoneId ZONE_ID= ZoneId.of("America/Bogota");
     private static final Pattern emainPattern= Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");

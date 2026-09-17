@@ -47,5 +47,5 @@ public class UserEntity {
     private String password;
 
     @Column(name= "id_role" ,nullable = false)
-    private int idRole;
+    private Long idRole;
 }

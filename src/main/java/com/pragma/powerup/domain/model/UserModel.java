@@ -20,5 +20,5 @@ public class UserModel {
     private LocalDate birthDate;
     private String email;
     private String password;
-    private int idRole;
+    private Long idRole;
 }
