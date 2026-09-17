@@ -33,7 +33,7 @@ class UserUseCaseTest {
     void setUp(){
         userValid= new UserModel(null,"Santiago", "Pineda", "1022598694",
                 "+57315687459", LocalDate.now().minusYears(21),
-                "santiago@test.com","contrasena",0);
+                "santiago@test.com","contrasena",0L);
     }
 
     @Test
