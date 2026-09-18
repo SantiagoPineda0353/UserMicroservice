@@ -2,6 +2,7 @@ package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.UserModel;
+import com.pragma.powerup.domain.spi.IRestaurantValidationPort;
 import com.pragma.powerup.domain.spi.IUserPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,19 +26,28 @@ class UserUseCaseTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private IRestaurantValidationPort restaurantValidationPort;
+
     @InjectMocks
     private UserUseCase userUseCase;
     private UserModel userValid;
+    private UserModel validEmployee;
+
+    private static final Long OWNER_ID=1L;
 
     @BeforeEach
     void setUp(){
         userValid= new UserModel(null,"Santiago", "Pineda", "1022598694",
                 "+57315687459", LocalDate.now().minusYears(21),
-                "santiago@test.com","contrasena",0L);
+                "santiago@test.com","contrasena",0L,1L);
+        validEmployee= new UserModel(null, "Juan", "Perez", "1122334455",
+                "+573009998877", LocalDate.now().minusYears(20),
+                "juan.perez@correo.com", "ClaveSegura123", null, 5L);
     }
 
     @Test
-    void saveOwner_userValid(){
+    void saveOwner_whenUserValid_thenSaveOwner(){
         when(userPersistencePort.existsByEmail(userValid.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(userValid.getPassword())).thenReturn("hashed");
 
@@ -48,35 +58,81 @@ class UserUseCaseTest {
     }
 
     @Test
-    void saveOwner_emailInvalid(){
+    void saveOwner_whenEmailInvalid_thenThrowsException(){
         userValid.setEmail("emailnovalido");
         assertThrows(InvalidEmailException.class, () ->userUseCase.saveOwer(userValid));
         verify(userPersistencePort, never()).saveUser(any());
     }
 
     @Test
-    void saveOwner_cellphoneInvalid(){
+    void saveOwner_whenCellphoneInvalid_thenThrowsException(){
         userValid.setCellphone("+312322233212233");
         assertThrows(InvalidCellphoneException.class, () ->userUseCase.saveOwer(userValid));
     }
 
     @Test
-    void saveOwner_documentInvalid(){
+    void saveOwner_whenDocumentInvalid_thenThrowsException(){
         userValid.setDocument("qwerty12");
         assertThrows(InvalidDocumentException.class, () ->userUseCase.saveOwer(userValid));
     }
 
     @Test
-    void saveOwner_ageInvalid(){
+    void saveOwner_whenAgeInvalid_thenThrowsException(){
         userValid.setBirthDate(LocalDate.now().minusYears(15));
         assertThrows(InvalidUserAgeException.class, () ->userUseCase.saveOwer(userValid));
     }
 
     @Test
-    void saveOwner_emailDuplicate(){
+    void saveOwner_whenEmailDuplicate_thenThrowsException(){
         when(userPersistencePort.existsByEmail(userValid.getEmail())).thenReturn(true);
         assertThrows(InvalidEmailDuplicate.class, () ->userUseCase.saveOwer(userValid));
         verify(userPersistencePort, never()).saveUser(any());
+    }
+
+    @Test
+    void saveEmployee_whenValidDataAndOwnerMatches_thenSaveWithEmployeeRole(){
+        when(userPersistencePort.existsByEmail(validEmployee.getEmail()))
+                .thenReturn(false);
+        when(restaurantValidationPort.getRestaurantOwnerId(5L))
+                .thenReturn(OWNER_ID);
+        userUseCase.saveEmployee(validEmployee,OWNER_ID);
+        verify(userPersistencePort).saveUser(any());
+        assertEquals(3L,validEmployee.getIdRole());
+    }
+
+    @Test
+    void saveEmployee_whenRestaurantBelongsToOtherOwner_thenThrowsException(){
+        when(userPersistencePort.existsByEmail(validEmployee.getEmail()))
+                .thenReturn(false);
+        when(restaurantValidationPort.getRestaurantOwnerId(5L))
+                .thenReturn(999L);
+        assertThrows(UserNotOwnerRestaurantException.class, () ->userUseCase.saveEmployee(validEmployee,OWNER_ID));
+        verify(userPersistencePort, never()).saveUser(any());
+    }
+
+    @Test
+    void saveEmployee_whenRestaurantNonExistent_thenThrowsException(){
+        when(userPersistencePort.existsByEmail(validEmployee.getEmail()))
+                .thenReturn(false);
+        when(restaurantValidationPort.getRestaurantOwnerId(5L))
+                .thenThrow(new UserNotOwnerRestaurantException());
+        assertThrows(UserNotOwnerRestaurantException.class, () ->userUseCase.saveEmployee(validEmployee,OWNER_ID));
+    }
+
+    @Test
+    void saveEmployee_whenEmailInvalid_thenThrowsExceptionBeforeCallingFeign(){
+        validEmployee.setEmail("correo-sin-arroba");
+        assertThrows(InvalidEmailException.class, () ->userUseCase.saveEmployee(validEmployee,OWNER_ID));
+        verify(restaurantValidationPort, never()).getRestaurantOwnerId(any());
+        verify(userPersistencePort, never()).saveUser(any());
+    }
+
+    @Test
+    void saveEmployee_whenEmailAlreadyRegistered_thenThrowsException(){
+        when(userPersistencePort.existsByEmail(validEmployee.getEmail()))
+                .thenReturn(true);
+        assertThrows(InvalidEmailDuplicate.class, () ->userUseCase.saveEmployee(validEmployee,OWNER_ID));
+        verify(restaurantValidationPort, never()).getRestaurantOwnerId(any());
     }
 
 }

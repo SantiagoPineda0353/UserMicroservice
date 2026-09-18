@@ -48,4 +48,7 @@ public class UserEntity {
 
     @Column(name= "id_role" ,nullable = false)
     private Long idRole;
+
+    @Column(name= "id_restaurant")
+    private Long idRestaurant;
 }

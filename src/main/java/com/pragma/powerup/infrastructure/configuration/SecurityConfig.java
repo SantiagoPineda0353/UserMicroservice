@@ -49,6 +49,7 @@ public class SecurityConfig {
                     .antMatchers(HttpMethod.POST , "/api/v1/auth/login").permitAll()
                     .antMatchers(HttpMethod.GET , "/api/v1/users/*").permitAll()
                     .antMatchers(HttpMethod.POST , "/api/v1/users/owner").hasRole("ADMINISTRADOR")
+                .antMatchers(HttpMethod.POST , "/api/v1/users/employee").hasRole("PROPIETARIO")
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
