@@ -33,6 +33,7 @@ class UserUseCaseTest {
     private UserUseCase userUseCase;
     private UserModel userValid;
     private UserModel validEmployee;
+    private UserModel validClient;
 
     private static final Long OWNER_ID=1L;
 
@@ -43,7 +44,10 @@ class UserUseCaseTest {
                 "santiago@test.com","contrasena",0L,1L);
         validEmployee= new UserModel(null, "Juan", "Perez", "1122334455",
                 "+573009998877", LocalDate.now().minusYears(20),
-                "juan.perez@correo.com", "ClaveSegura123", null, 5L);
+                "juan.perez@correo.com", "contrasena", null, 5L);
+        validClient= new UserModel(null, "Esteban", "Castro", "232123321",
+                "+573213215467", LocalDate.now().minusYears(34),
+                "Esteban.Castro@correo.com", "contrasena", null,null);
     }
 
     @Test
@@ -135,4 +139,46 @@ class UserUseCaseTest {
         verify(restaurantValidationPort, never()).getRestaurantOwnerId(any());
     }
 
+    @Test
+    void saveClient_whenValidClient_thenSaveOwner(){
+        when(userPersistencePort.existsByEmail(validClient.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(validClient.getPassword())).thenReturn("hashed");
+
+        userUseCase.saveClient(validClient);
+
+        verify(userPersistencePort).saveUser(any(UserModel.class));
+        assertEquals("hashed",validClient.getPassword());
+    }
+
+    @Test
+    void saveClient_whenEmailInvalid_thenThrowsException(){
+        validClient.setEmail("emailnovalido");
+        assertThrows(InvalidEmailException.class, () ->userUseCase.saveClient(validClient));
+        verify(userPersistencePort, never()).saveUser(any());
+    }
+
+    @Test
+    void saveClient_whenCellphoneInvalid_thenThrowsException(){
+        validClient.setCellphone("+312322233212233");
+        assertThrows(InvalidCellphoneException.class, () ->userUseCase.saveClient(validClient));
+    }
+
+    @Test
+    void saveClient_whenDocumentInvalid_thenThrowsException(){
+        validClient.setDocument("qwerty12");
+        assertThrows(InvalidDocumentException.class, () ->userUseCase.saveClient(validClient));
+    }
+
+    @Test
+    void saveClient_whenAgeInvalid_thenThrowsException(){
+        validClient.setBirthDate(LocalDate.now().minusYears(15));
+        assertThrows(InvalidUserAgeException.class, () ->userUseCase.saveClient(validClient));
+    }
+
+    @Test
+    void saveClient_whenEmailDuplicate_thenThrowsException(){
+        when(userPersistencePort.existsByEmail(validClient.getEmail())).thenReturn(true);
+        assertThrows(InvalidEmailDuplicate.class, () ->userUseCase.saveClient(validClient));
+        verify(userPersistencePort, never()).saveUser(any());
+    }
 }
