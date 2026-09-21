@@ -14,8 +14,9 @@ import java.util.regex.Pattern;
 
 public class UserUseCase implements IUserServicePort {
 
-    private static final Long ID_ROL=2L;
+    private static final Long ROLE_PROPRIETARY =2L;
     private static final Long ROLE_EMPLOYEE_ID =3L;
+    private static final Long ROLE_CLIENT_ID =4L;
     private static final int MIN_AGE=18;
     private static final ZoneId ZONE_ID= ZoneId.of("America/Bogota");
     private static final Pattern emainPattern= Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -38,6 +39,21 @@ public class UserUseCase implements IUserServicePort {
     }
 
     @Override
+    public void saveClient(UserModel userModel) {
+        validateEmail(userModel.getEmail());
+        validateAge(userModel.getBirthDate());
+        validateCellphone(userModel.getCellphone());
+        validateDocument(userModel.getDocument());
+
+        if(userPersistencePort.existsByEmail(userModel.getEmail())){
+            throw new InvalidEmailDuplicate();
+        }
+        userModel.setIdRole(ROLE_CLIENT_ID);
+        userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
+        userPersistencePort.saveUser(userModel);
+    }
+
+    @Override
     public void saveOwer(UserModel userModel) {
         validateEmail(userModel.getEmail());
         validateAge(userModel.getBirthDate());
@@ -47,7 +63,7 @@ public class UserUseCase implements IUserServicePort {
         if(userPersistencePort.existsByEmail(userModel.getEmail())){
             throw new InvalidEmailDuplicate();
         }
-        userModel.setIdRole(ID_ROL);
+        userModel.setIdRole(ROLE_PROPRIETARY);
         userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
         userPersistencePort.saveUser(userModel);
     }

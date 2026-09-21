@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.input.rest;
 
+import com.pragma.powerup.application.dto.request.SaveClientRequestDto;
 import com.pragma.powerup.application.dto.request.SaveEmployeeRequestDto;
 import com.pragma.powerup.application.dto.request.SaveUserRequestDto;
 import com.pragma.powerup.application.dto.response.UserResponseDto;
@@ -43,6 +44,18 @@ public class UserRestController {
     public ResponseEntity<Void> saveEmployee(@RequestBody SaveEmployeeRequestDto saveEmployeeRequestDto) {
         Long idOwner = AuthenticationUtils.getAuthenticatedUserId();
         userHandler.saveEmployee(saveEmployeeRequestDto,idOwner);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Crear cuenta cliente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Cliente creado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Correo ya registrado", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos incorrectos", content = @Content)
+    })
+    @PostMapping("/client")
+    public ResponseEntity<Void> saveClient(@RequestBody SaveClientRequestDto saveClientRequestDto) {
+        userHandler.saveClient(saveClientRequestDto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
