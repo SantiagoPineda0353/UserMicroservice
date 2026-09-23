@@ -24,6 +24,10 @@ public class CustomUserDetails implements UserDetails {
     public Long getIdRole(){
         return userEntity.getIdRole();
     }
+
+    public Long getIdRestaurant(){
+        return userEntity.getIdRestaurant();
+    }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         RoleEnum role= RoleEnum.fromId(userEntity.getIdRole());
