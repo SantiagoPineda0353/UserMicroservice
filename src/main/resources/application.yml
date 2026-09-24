@@ -16,7 +16,7 @@ jwt:
   expiration: 864000000
 
 app:
-  appDescription: "Pragma Powerup"
+  appDescription: "Usuario MicroServicio"
   appVersion: "1.0.0"
 
 adapters:

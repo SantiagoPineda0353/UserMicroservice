@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
+                    .antMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
                     .antMatchers(HttpMethod.POST , "/api/v1/auth/login").permitAll()
                     .antMatchers(HttpMethod.GET , "/api/v1/users/*").permitAll()
                     .antMatchers(HttpMethod.POST , "/api/v1/users/owner").hasRole("ADMINISTRADOR")
